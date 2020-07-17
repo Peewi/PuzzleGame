@@ -46,7 +46,7 @@ namespace PuzzleGame.UI
 			{
 				if (game is Game1 g1)
 				{
-					g1.NewGame();
+					//g1.NewGame();
 				}
 			};
 			var q = new Button(game)

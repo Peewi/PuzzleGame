@@ -122,11 +122,12 @@ namespace PuzzleGame
 			Config.ApplyGraphics(graphics, Window);
 		}
 
-		public void NewGame()
+		public void NewGame(int level)
 		{
 			UI.OpenScreen(UIScreen.GameHUDScreen(this));
 			Components.Remove(Board);
 			Board = new PuzzleBoard(this);
+			Board.NewGame(level);
 			Components.Add(Board);
 			Camera.Center = new Vector2(160, 90);
 			CurrentlyPlaying = true;

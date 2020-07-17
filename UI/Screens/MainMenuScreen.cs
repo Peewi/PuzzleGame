@@ -45,7 +45,8 @@ namespace PuzzleGame.UI
 			{
 				if (game is Game1 g1)
 				{
-					g1.NewGame();
+					//g1.NewGame();
+					g1.UI.OpenScreen(DifficultySelectScreen(game));
 				}
 			};
 			spMenu.Children.Add(ng);

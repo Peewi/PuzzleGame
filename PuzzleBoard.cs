@@ -38,13 +38,12 @@ namespace PuzzleGame
 			TopLeft = Camera.Center;
 			TopLeft.X -= BOARDWIDTH * TILESIZE / 2;
 			TopLeft.Y -= BOARDHEIGHT * TILESIZE / 2;
-			NewGame(10);
 		}
 
-		void NewGame(int level)
+		public void NewGame(int level)
 		{
+			// https://www.researchgate.net/publication/334724493_Dr_Mario_Puzzle_Generation_Theory_Practice_History_FamicomNES
 			Viruses = new int[BOARDWIDTH, BOARDHEIGHT];
-			int virusesLeft = (level + 1) * 4;
 			Random rng = new Random();
 			int maxRow = BOARDHEIGHT - 10;
 			if (level >= 15)
@@ -59,32 +58,56 @@ namespace PuzzleGame
 			{
 				maxRow--;
 			}
-			int currentColor = rng.Next(0, 3);
-			while (virusesLeft > 0)
+			int cellsLeft = BOARDWIDTH * (BOARDHEIGHT - maxRow);
+			int virusesLeft = (level + 1) * 4;
+			int[] colorsPlaced = new int[4];
+			for (int j = BOARDHEIGHT-1; j >= maxRow; j--)
 			{
-				int x = rng.Next(BOARDWIDTH);
-				int y = rng.Next(maxRow, BOARDHEIGHT);
-				while (Viruses[x,y] != 0)
+				for (int i = 0; i < BOARDWIDTH; i++)
 				{
-					x++;
-					if (x >= BOARDWIDTH)
+					float placeRoll = (float)rng.NextDouble();
+					// 2-away rule
+					bool[] available = { true, true, true, true };
+					if (i - 2 >= 0 && Viruses[i - 2, j] != 0)
 					{
-						x = 0;
-						y--;
-						if (y < maxRow)
+						available[Viruses[i - 2, j]] = false;
+					}
+					if (j + 2 < BOARDHEIGHT && Viruses[i, j + 2] != 0)
+					{
+						available[Viruses[i, j + 2]] = false;
+					}
+					int numAvailable = 0;
+					for (int k = 1; k < 4; k++)
+					{
+						numAvailable += available[k] ? 1 : 0;
+					}
+					// chance stuff
+					float[] chanceSize = { cellsLeft - virusesLeft, 0, 0, 0 };
+					for (int k = 1; k < 4; k++)
+					{
+						chanceSize[k] = available[k] ? (float)virusesLeft / numAvailable : 0;
+					}
+					float colorRunning = 0;
+
+					for (int k = 0; k < 4; k++)
+					{
+						if (available[k])
 						{
-							y++;
-							x = BOARDWIDTH - 1;
-							break;
+							colorRunning += chanceSize[k];
+							float colorChance = colorRunning / cellsLeft;
+							if (placeRoll < colorChance)
+							{
+								Viruses[i, j] = k;
+								colorsPlaced[k]++;
+								if (k!=0)
+								{
+									virusesLeft--; 
+								}
+								break;
+							}
 						}
 					}
-				}
-				if (Viruses[x, y] == 0)
-				{
-					Viruses[x, y] = currentColor + 1;
-					currentColor++;
-					currentColor %= 3;
-					virusesLeft--;
+					cellsLeft--;
 				}
 			}
 		}
