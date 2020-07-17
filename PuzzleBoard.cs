@@ -76,39 +76,56 @@ namespace PuzzleGame
 					{
 						available[Viruses[i, j + 2]] = false;
 					}
-					int numAvailable = 0;
+					int numColorsAvailable = 0;
 					for (int k = 1; k < 4; k++)
 					{
-						numAvailable += available[k] ? 1 : 0;
+						numColorsAvailable += available[k] ? 1 : 0;
 					}
 					// chance stuff
 					float[] chanceSize = { cellsLeft - virusesLeft, 0, 0, 0 };
+					float[] colorChanceA = { cellsLeft - virusesLeft, 0, 0, 0 };
+					colorChanceA[0] /= cellsLeft;
+					float virusChance = 1 - colorChanceA[0];
+					int mostPlaced = Math.Max(Math.Max(colorsPlaced[0], colorsPlaced[1]), colorsPlaced[2]);
 					for (int k = 1; k < 4; k++)
 					{
-						chanceSize[k] = available[k] ? (float)virusesLeft / numAvailable : 0;
+						chanceSize[k] = available[k] ? (float)virusesLeft / numColorsAvailable : 0;
+						int below = colorsPlaced[k];
+						while (below < mostPlaced)
+						{
+							chanceSize[k] *= 3;
+							below++;
+						}
+					}
+					for (int k = 1; k < 4; k++)
+					{
+						colorChanceA[k] = chanceSize[k] / (chanceSize[1] + chanceSize[2] + chanceSize[3]);
+						colorChanceA[k] *= virusChance;
 					}
 					float colorRunning = 0;
 
 					for (int k = 0; k < 4; k++)
 					{
-						if (available[k])
+						colorRunning += colorChanceA[k];
+						float colorChance = colorRunning;
+						if (placeRoll < colorChance)
 						{
-							colorRunning += chanceSize[k];
-							float colorChance = colorRunning / cellsLeft;
-							if (placeRoll < colorChance)
+							Viruses[i, j] = k;
+							colorsPlaced[k]++;
+							if (k != 0)
 							{
-								Viruses[i, j] = k;
-								colorsPlaced[k]++;
-								if (k!=0)
-								{
-									virusesLeft--; 
-								}
-								break;
+								virusesLeft--; 
 							}
+							break;
 						}
 					}
 					cellsLeft--;
 				}
+			}
+			// If there's a color completely missing, just make a new level
+			if (colorsPlaced[1] == 0 || colorsPlaced[2] == 0 || colorsPlaced[3] == 0)
+			{
+				NewGame(level);
 			}
 		}
 
