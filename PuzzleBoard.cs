@@ -24,14 +24,19 @@ namespace PuzzleGame
 		SpriteBatch SpriteBatch => Game1.SpriteBatch;
 		Camera Camera => Game1.Camera;
 		Vector2 TopLeft;
+		Random RNG;
 		int InputDir = 0;
 		float InputTimeHeld = 0;
 		float InputRepeatDelay = 0.4f;
 		float InputRepeatInterval = 0.1f;
 		float DropInterval = 0.75f;
 		float DropTime = 0;
-		int CursorX = 0;
-		int CursorY = 0;
+		Point CursorPos = new Point(3, 0);
+		Point CursorPosPart2 => CursorPos + (CursorUpright ? new Point(0, -1) : new Point(1, 0));
+		bool CursorActive = false;
+		bool CursorUpright = false;
+		int CursorColor1 = 0;
+		int CursorColor2 = 1;
 		const int BOARDWIDTH = 8;
 		const int BOARDHEIGHT = 16;
 		const int TILESIZE = 8;
@@ -58,7 +63,8 @@ namespace PuzzleGame
 		{
 			// https://www.researchgate.net/publication/334724493_Dr_Mario_Puzzle_Generation_Theory_Practice_History_FamicomNES
 			Board = new (BoardSpace, int)[BOARDWIDTH, BOARDHEIGHT];
-			Random rng = new Random();
+			RNG = new Random();
+			CursorActive = false;
 			int maxRow = BOARDHEIGHT - 10;
 			if (level >= 15)
 			{
@@ -79,7 +85,7 @@ namespace PuzzleGame
 			{
 				for (int i = 0; i < BOARDWIDTH; i++)
 				{
-					float placeRoll = (float)rng.NextDouble();
+					float placeRoll = (float)RNG.NextDouble();
 					// 2-away rule
 					bool[] available = { true, true, true, true };
 					if (i - 2 >= 0 && Board[i - 2, j].Item1 == BoardSpace.Virus)
@@ -181,18 +187,74 @@ namespace PuzzleGame
 				doInput = true;
 				InputDir = 1;
 			}
+			if (Input.JustPressed(Actions.Up))
+			{
+				CursorUpright = !CursorUpright;
+				if (!IsEmpty(CursorPosPart2))
+				{
+					Point kickLeft = new Point(-1, 0);
+					Point kickRight = new Point(1, 0);
+					if (IsEmpty(CursorPos + kickLeft)
+						&& IsEmpty(CursorPosPart2 + kickLeft))
+					{
+						CursorPos.X--;
+					}
+					else if(IsEmpty(CursorPos + kickRight)
+						&& IsEmpty(CursorPosPart2 + kickRight))
+					{
+						CursorPos.X++;
+					}
+					else
+					{
+						CursorUpright = !CursorUpright;
+					}
+				}
+				else if (!CursorUpright)
+				{
+					int tmp = CursorColor1;
+					CursorColor1 = CursorColor2;
+					CursorColor2 = tmp;
+				}
+				//TODO: Wall kicks and color swaps
+			}
+			if (!CursorActive)
+			{
+				NewPill();
+			}
 			if (doInput)
 			{
-				CursorX += InputDir;
-				CursorX = MathHelper.Clamp(CursorX, 0, BOARDWIDTH - 1);
+				Point inputMove = new Point(InputDir, 0);
+				if (IsEmpty(CursorPos+inputMove)
+					&& IsEmpty(CursorPosPart2 + inputMove))
+				{
+					CursorPos.X += InputDir;
+				}
 			}
 			// drop timer
 			DropTime += dt;
+			if (Input.PlayerDown)
+			{
+				DropTime += dt * 3;
+			}
 			if (DropTime >= DropInterval)
 			{
 				DropTime -= DropInterval;
-				CursorY++;
-				CursorY %= BOARDHEIGHT;
+				Point pos2 = CursorPosPart2;
+				Point downMove = new Point(0, 1);
+				if (!IsEmpty(CursorPos + downMove)
+					|| !IsEmpty(pos2 + downMove))
+				{
+					Board[CursorPos.X, CursorPos.Y].Item1 = CursorUpright ? BoardSpace.PillLower : BoardSpace.PillLeft;
+					Board[CursorPos.X, CursorPos.Y].Item2 = CursorColor1;
+					Board[pos2.X, pos2.Y].Item1 = CursorUpright ? BoardSpace.PillUpper : BoardSpace.PillRight;
+					Board[pos2.X, pos2.Y].Item2 = CursorColor2;
+					CursorActive = false;
+				}
+				else
+				{
+					CursorPos.Y++;
+				}
+				CursorPos.Y %= BOARDHEIGHT;
 			}
 			// pause button
 			if (Game1.Input.Pause)
@@ -201,10 +263,35 @@ namespace PuzzleGame
 			}
 		}
 
+		void NewPill()
+		{
+			CursorActive = true;
+			CursorPos = new Point(3, 0);
+			CursorUpright = false;
+			// TODO: grab bag
+			CursorColor1 = RNG.Next(3);
+			CursorColor2 = RNG.Next(3);
+		}
+
+		bool IsEmpty(Point pos)
+		{
+			if (pos.Y < 0)
+			{
+				return true;
+			}
+			else if (pos.X < 0
+				|| pos.X >= BOARDWIDTH
+				|| pos.Y >= BOARDHEIGHT)
+			{
+				return false;
+			}
+			return Board[pos.X, pos.Y].Item1 == BoardSpace.Blank;
+		}
+
 		public override void Draw(GameTime gameTime)
 		{
 			Rectangle bg = new Rectangle((int)TopLeft.X, (int)TopLeft.Y, BOARDWIDTH * TILESIZE, BOARDHEIGHT * TILESIZE);
-			Rectangle cursor = new Rectangle((int)TopLeft.X + CursorX * TILESIZE, (int)TopLeft.Y + CursorY * TILESIZE, TILESIZE, TILESIZE);
+			Rectangle cursor = new Rectangle((int)TopLeft.X + CursorPos.X * TILESIZE, (int)TopLeft.Y + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
 			bg = Camera.ScreenRect(bg);
 			cursor = Camera.ScreenRect(cursor);
 			SpriteBatch.Draw(Game1.Pixel, bg, Color.Black);
@@ -233,10 +320,10 @@ namespace PuzzleGame
 							SpriteBatch.Draw(Game1.Blocks, drawRect, roundSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
 							break;
 						case BoardSpace.PillLeft:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], MathF.PI, spaceOrigin, SpriteEffects.None, 0.5f);
+							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
 							break;
 						case BoardSpace.PillRight:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
+							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], MathHelper.Pi, spaceOrigin, SpriteEffects.None, 0.5f);
 							break;
 						case BoardSpace.PillUpper:
 							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], MathHelper.PiOver2, spaceOrigin, SpriteEffects.None, 0.5f);
@@ -248,6 +335,28 @@ namespace PuzzleGame
 							break;
 					}
 				}
+			}
+			if (CursorActive)
+			{
+				Rectangle currentPill1 = new Rectangle((int)TopLeft.X + 4 + CursorPos.X * TILESIZE, (int)TopLeft.Y + 4 + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
+				Rectangle currentPill2 = new Rectangle((int)TopLeft.X + 4 + CursorPos.X * TILESIZE, (int)TopLeft.Y + 4 + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
+				float rot1, rot2;
+				if (CursorUpright)
+				{
+					currentPill2.Y -= TILESIZE;
+					rot1 = MathHelper.PiOver2 * 3;
+					rot2 = MathHelper.PiOver2;
+				}
+				else
+				{
+					currentPill2.X += TILESIZE;
+					rot1 = 0;
+					rot2 = MathHelper.Pi;
+				}
+				currentPill1 = Camera.ScreenRect(currentPill1);
+				currentPill2 = Camera.ScreenRect(currentPill2);
+				SpriteBatch.Draw(Game1.Blocks, currentPill1, pillSrc, Colors[CursorColor1], rot1, spaceOrigin, SpriteEffects.None, 0.5f);
+				SpriteBatch.Draw(Game1.Blocks, currentPill2, pillSrc, Colors[CursorColor2], rot2, spaceOrigin, SpriteEffects.None, 0.5f);
 			}
 		}
 	}
