@@ -19,11 +19,8 @@ namespace PuzzleGame
 		Down,
 		Left,
 		Right,
-		Shoot,
-		Jump,
-		Attack,
-		ActivateRobots,
-		DebugExplode
+		RotateLeft,
+		RotateRight
 	}
 	enum MenuActions
 	{
@@ -128,7 +125,7 @@ namespace PuzzleGame
 		/// <summary>
 		/// The actions that should appear in the keybindings menu
 		/// </summary>
-		public Actions[] BindableActions = { Actions.Up, Actions.Down, Actions.Left, Actions.Right, Actions.Jump, Actions.Attack, Actions.ActivateRobots };
+		public Actions[] BindableActions = { Actions.Up, Actions.Down, Actions.Left, Actions.Right, Actions.RotateLeft, Actions.RotateRight };
 		Buttons[] BindableButtons = new Buttons[]
 			{
 				Buttons.A,
@@ -194,7 +191,6 @@ namespace PuzzleGame
 		public bool PlayerRight => Pressed(Actions.Right);
 		public bool PlayerUp => Pressed(Actions.Up);
 		public bool PlayerDown => Pressed(Actions.Down);
-		public bool PlayerJump => JustPressed(Actions.Jump);
 		/// <summary>
 		/// Normalized move direction
 		/// </summary>
@@ -271,7 +267,6 @@ namespace PuzzleGame
 			}
 			return dir;
 		}
-		public bool PlayerShoot => JustPressed(Actions.Shoot);
 		#endregion
 		public Vector2 MousePos => mouse.Position.ToVector2();
 		/// <summary>
@@ -320,19 +315,17 @@ namespace PuzzleGame
 			SetKeybind(new Input(Keys.Down), Actions.Down);
 			SetKeybind(new Input(Keys.Left), Actions.Left);
 			SetKeybind(new Input(Keys.Right), Actions.Right);
-			SetKeybind(new Input(Keys.Z), Actions.Jump);
-			SetKeybind(new Input(Keys.X), Actions.Attack);
-			SetKeybind(new Input(Keys.C), Actions.ActivateRobots);
-			SetKeybind(new Input(Keys.V), Actions.DebugExplode);
-			SetKeybind(new Input(MouseInputs.LeftMouse), Actions.Shoot);
+			SetKeybind(new Input(Keys.Z), Actions.RotateLeft);
+			SetKeybind(new Input(Keys.X), Actions.RotateRight);
 
 			SetKeybind(new Input(Buttons.DPadUp), Actions.Up);
 			SetKeybind(new Input(Buttons.DPadDown), Actions.Down);
 			SetKeybind(new Input(Buttons.DPadLeft), Actions.Left);
 			SetKeybind(new Input(Buttons.DPadRight), Actions.Right);
-			SetKeybind(new Input(Buttons.A), Actions.Jump);
-			SetKeybind(new Input(Buttons.X), Actions.Attack);
-			SetKeybind(new Input(Buttons.B), Actions.ActivateRobots);
+			SetKeybind(new Input(Buttons.A), Actions.RotateLeft);
+			SetKeybind(new Input(Buttons.X), Actions.RotateRight);
+			SetKeybind(new Input(Buttons.B), Actions.RotateRight);
+			SetKeybind(new Input(Buttons.Y), Actions.RotateLeft);
 		}
 		/// <summary>
 		/// Get the inputs bound to an action
