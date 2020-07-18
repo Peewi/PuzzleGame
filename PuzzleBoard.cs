@@ -14,7 +14,17 @@ namespace PuzzleGame
 		PillLeft,
 		PillRight,
 		PillUpper,
-		PillLower
+		PillLower,
+		Popping
+	}
+
+	enum PuzzleGameState
+	{
+		InControl,
+		Popping,
+		Cascading,
+		GameOver,
+		Victory
 	}
 
 	class PuzzleBoard : DrawableGameComponent
@@ -25,6 +35,9 @@ namespace PuzzleGame
 		Camera Camera => Game1.Camera;
 		Vector2 TopLeft;
 		Random RNG;
+		public int Points = 0;
+		int SpeedMulti = 1;
+		int CurrentMulti = 1;
 		int InputDir = 0;
 		float InputTimeHeld = 0;
 		float InputRepeatDelay = 0.4f;
@@ -37,6 +50,9 @@ namespace PuzzleGame
 		bool CursorUpright = false;
 		int CursorColor1 = 0;
 		int CursorColor2 = 1;
+		PuzzleGameState State = PuzzleGameState.InControl;
+		float StateTime = 0;
+		float CascadeRowTime = 0.25f;
 		const int BOARDWIDTH = 8;
 		const int BOARDHEIGHT = 16;
 		const int TILESIZE = 8;
@@ -65,6 +81,7 @@ namespace PuzzleGame
 			Board = new (BoardSpace, int)[BOARDWIDTH, BOARDHEIGHT];
 			RNG = new Random();
 			CursorActive = false;
+			State = PuzzleGameState.InControl;
 			int maxRow = BOARDHEIGHT - 10;
 			if (level >= 15)
 			{
@@ -187,74 +204,110 @@ namespace PuzzleGame
 				doInput = true;
 				InputDir = 1;
 			}
-			if (Input.JustPressed(Actions.Up))
+			// Here comes George, in control
+			if (State == PuzzleGameState.InControl)
 			{
-				CursorUpright = !CursorUpright;
-				if (!IsEmpty(CursorPosPart2))
+				if (Input.JustPressed(Actions.Up))
 				{
-					Point kickLeft = new Point(-1, 0);
-					Point kickRight = new Point(1, 0);
-					if (IsEmpty(CursorPos + kickLeft)
-						&& IsEmpty(CursorPosPart2 + kickLeft))
+					CursorUpright = !CursorUpright;
+					if (!IsEmpty(CursorPosPart2))
 					{
-						CursorPos.X--;
+						Point kickLeft = new Point(-1, 0);
+						Point kickRight = new Point(1, 0);
+						if (IsEmpty(CursorPos + kickLeft)
+							&& IsEmpty(CursorPosPart2 + kickLeft))
+						{
+							CursorPos.X--;
+						}
+						else if (IsEmpty(CursorPos + kickRight)
+							&& IsEmpty(CursorPosPart2 + kickRight))
+						{
+							CursorPos.X++;
+						}
+						else
+						{
+							CursorUpright = !CursorUpright;
+						}
 					}
-					else if(IsEmpty(CursorPos + kickRight)
-						&& IsEmpty(CursorPosPart2 + kickRight))
+					else if (!CursorUpright)
 					{
-						CursorPos.X++;
+						int tmp = CursorColor1;
+						CursorColor1 = CursorColor2;
+						CursorColor2 = tmp;
+					}
+				}
+				if (!CursorActive)
+				{
+					NewPill();
+				}
+				if (doInput)
+				{
+					Point inputMove = new Point(InputDir, 0);
+					if (IsEmpty(CursorPos + inputMove)
+						&& IsEmpty(CursorPosPart2 + inputMove))
+					{
+						CursorPos.X += InputDir;
+					}
+				}
+				// drop timer
+				DropTime += dt;
+				if (Input.PlayerDown)
+				{
+					DropTime += dt * 3;
+				}
+				if (DropTime >= DropInterval)
+				{
+					DropTime -= DropInterval;
+					Point pos2 = CursorPosPart2;
+					Point downMove = new Point(0, 1);
+					if (!IsEmpty(CursorPos + downMove)
+						|| !IsEmpty(pos2 + downMove))
+					{
+						Board[CursorPos.X, CursorPos.Y].Item1 = CursorUpright ? BoardSpace.PillLower : BoardSpace.PillLeft;
+						Board[CursorPos.X, CursorPos.Y].Item2 = CursorColor1;
+						Board[pos2.X, pos2.Y].Item1 = CursorUpright ? BoardSpace.PillUpper : BoardSpace.PillRight;
+						Board[pos2.X, pos2.Y].Item2 = CursorColor2;
+						CursorActive = false;
+						Pop4InARow();
+						State = PuzzleGameState.Popping;
+						StateTime = 0;
 					}
 					else
 					{
-						CursorUpright = !CursorUpright;
+						CursorPos.Y++;
+					}
+					CursorPos.Y %= BOARDHEIGHT;
+				}
+			}
+			else if (State == PuzzleGameState.Popping)
+			{
+				StateTime += dt;
+				if (StateTime >= CascadeRowTime)
+				{
+					ClearPopped();
+					State = PuzzleGameState.Cascading;
+					StateTime = 0;
+				}
+			}
+			else if (State == PuzzleGameState.Cascading)
+			{
+				StateTime += dt;
+				if (StateTime >= CascadeRowTime)
+				{
+					StateTime -= CascadeRowTime;
+					if (!CascadeOneRow())
+					{
+						StateTime = 0;
+						if (Pop4InARow())
+						{
+							State = PuzzleGameState.Popping;
+						}
+						else
+						{
+							State = PuzzleGameState.InControl;
+						}
 					}
 				}
-				else if (!CursorUpright)
-				{
-					int tmp = CursorColor1;
-					CursorColor1 = CursorColor2;
-					CursorColor2 = tmp;
-				}
-				//TODO: Wall kicks and color swaps
-			}
-			if (!CursorActive)
-			{
-				NewPill();
-			}
-			if (doInput)
-			{
-				Point inputMove = new Point(InputDir, 0);
-				if (IsEmpty(CursorPos+inputMove)
-					&& IsEmpty(CursorPosPart2 + inputMove))
-				{
-					CursorPos.X += InputDir;
-				}
-			}
-			// drop timer
-			DropTime += dt;
-			if (Input.PlayerDown)
-			{
-				DropTime += dt * 3;
-			}
-			if (DropTime >= DropInterval)
-			{
-				DropTime -= DropInterval;
-				Point pos2 = CursorPosPart2;
-				Point downMove = new Point(0, 1);
-				if (!IsEmpty(CursorPos + downMove)
-					|| !IsEmpty(pos2 + downMove))
-				{
-					Board[CursorPos.X, CursorPos.Y].Item1 = CursorUpright ? BoardSpace.PillLower : BoardSpace.PillLeft;
-					Board[CursorPos.X, CursorPos.Y].Item2 = CursorColor1;
-					Board[pos2.X, pos2.Y].Item1 = CursorUpright ? BoardSpace.PillUpper : BoardSpace.PillRight;
-					Board[pos2.X, pos2.Y].Item2 = CursorColor2;
-					CursorActive = false;
-				}
-				else
-				{
-					CursorPos.Y++;
-				}
-				CursorPos.Y %= BOARDHEIGHT;
 			}
 			// pause button
 			if (Game1.Input.Pause)
@@ -265,12 +318,172 @@ namespace PuzzleGame
 
 		void NewPill()
 		{
+			CurrentMulti = 1;
 			CursorActive = true;
 			CursorPos = new Point(3, 0);
 			CursorUpright = false;
 			// TODO: grab bag
 			CursorColor1 = RNG.Next(3);
 			CursorColor2 = RNG.Next(3);
+		}
+		/// <summary>
+		/// Make freefloating pills fall 1 row.
+		/// </summary>
+		/// <returns>Whether any changes were made to the board</returns>
+		bool CascadeOneRow()
+		{
+			bool changed = false;
+			// starting 1 row from the bottom
+			// bottom row can never drop
+			for (int j = BOARDHEIGHT - 2; j >= 0; j--)
+			{
+				for (int i = 0; i < BOARDWIDTH; i++)
+				{
+					// Since we're sweeping from the lower left, we only
+					// need to care about round, lower and left pills
+					if (Board[i, j].Item1 == BoardSpace.PillRound)
+					{
+						if (Board[i, j + 1].Item1 == BoardSpace.Blank)
+						{
+							Board[i, j + 1] = Board[i, j];
+							Board[i, j] = (BoardSpace.Blank, 0);
+							changed = true;
+						}
+					}
+					else if (Board[i, j].Item1 == BoardSpace.PillLower)
+					{
+						if (Board[i, j + 1].Item1 == BoardSpace.Blank)
+						{
+							Board[i, j + 1] = Board[i, j];
+							Board[i, j] = Board[i, j -1 ];
+							Board[i, j - 1] = (BoardSpace.Blank, 0);
+							changed = true;
+						}
+					}
+					else if (Board[i, j].Item1 == BoardSpace.PillLeft)
+					{
+						if (Board[i, j + 1].Item1 == BoardSpace.Blank
+							&& Board[i + 1, j + 1].Item1 == BoardSpace.Blank)
+						{
+							Board[i, j + 1] = Board[i, j];
+							Board[i, j] = (BoardSpace.Blank, 0);
+							Board[i + 1, j + 1] = Board[i + 1, j];
+							Board[i + 1, j] = (BoardSpace.Blank, 0);
+							changed = true;
+						}
+					}
+				}
+			}
+			return changed;
+		}
+		/// <summary>
+		/// Pop any occurrences of 4 in a row.
+		/// Tiles are not removed immediately, but changed to an intermediate state.
+		/// </summary>
+		/// <returns>Whether any changes were made to the board</returns>
+		bool Pop4InARow()
+		{
+			bool changed = false;
+			const int ROWLENGTH = 4;
+			// find rows and columns of 4 and replace them with popping
+			for (int j = 0; j < BOARDHEIGHT; j++)
+			{
+				for (int i = 0; i < BOARDWIDTH; i++)
+				{
+					if (Board[i,j].Item1 != BoardSpace.Blank)
+					{
+						int rowColor = Board[i, j].Item2;
+						int row = 1;
+						int col = 1;
+						for (int k = 1; k < ROWLENGTH; k++)
+						{
+							if (i + k < BOARDWIDTH)
+							{
+								row += (Board[i + k, j].Item2 == rowColor && Board[i + k, j].Item1 != BoardSpace.Blank) ? 1 : 0; 
+							}
+							if (j + k < BOARDHEIGHT)
+							{
+								col += (Board[i, j + k].Item2 == rowColor && Board[i, j + k].Item1 != BoardSpace.Blank) ? 1 : 0;
+							}
+						}
+						// convert tiles, award points for viruses
+						if (row >= ROWLENGTH)
+						{
+							for (int k = 0; k < ROWLENGTH; k++)
+							{
+								if (Board[i + k, j].Item1 == BoardSpace.Virus)
+								{
+									Points += 100 * CurrentMulti * SpeedMulti;
+									CurrentMulti++;
+								}
+								Board[i + k, j].Item1 = BoardSpace.Popping;
+								changed = true;
+							}
+						}
+						if (col >= ROWLENGTH)
+						{
+							for (int k = 0; k < ROWLENGTH; k++)
+							{
+								if (Board[i, j + k].Item1 == BoardSpace.Virus)
+								{
+									Points += 100 * CurrentMulti * SpeedMulti;
+									CurrentMulti++;
+								}
+								Board[i, j + k].Item1 = BoardSpace.Popping;
+								changed = true;
+							}
+						}
+					}
+				}
+			}
+			// Change orphaned half pills to round pills
+			for (int j = 0; j < BOARDHEIGHT; j++)
+			{
+				for (int i = 0; i < BOARDWIDTH; i++)
+				{
+					Point checkOffset = Point.Zero;
+					switch (Board[i, j].Item1)
+					{
+						case BoardSpace.PillLeft:
+							checkOffset.X = 1;
+							break;
+						case BoardSpace.PillRight:
+							checkOffset.X = -1;
+							break;
+						case BoardSpace.PillUpper:
+							checkOffset.Y = 1;
+							break;
+						case BoardSpace.PillLower:
+							checkOffset.Y = -1;
+							break;
+					}
+					if (checkOffset != Point.Zero && Board[i + checkOffset.X, j + checkOffset.Y].Item1 == BoardSpace.Popping)
+					{
+						Board[i, j].Item1 = BoardSpace.PillRound;
+					}
+				}
+			}
+			return changed;
+		}
+		/// <summary>
+		/// Remove any popping tiles from the board.
+		/// </summary>
+		/// <returns>Whether any changes were made to the board</returns>
+		bool ClearPopped()
+		{
+			bool changed = false;
+			for (int j = 0; j < BOARDHEIGHT; j++)
+			{
+				for (int i = 0; i < BOARDWIDTH; i++)
+				{
+					if (Board[i,j].Item1 == BoardSpace.Popping)
+					{
+						Board[i, j] = (BoardSpace.Blank, 0);
+						changed = true;
+					}
+				}
+			}
+			return changed;
 		}
 
 		bool IsEmpty(Point pos)
@@ -300,6 +513,7 @@ namespace PuzzleGame
 			Rectangle blockSrc = new Rectangle(0, 0, 16, 16);
 			Rectangle pillSrc = new Rectangle(0, 16, 16, 16);
 			Rectangle roundSrc = new Rectangle(16, 16, 16, 16);
+			Rectangle popSrc = new Rectangle(48, 16, 16, 16);
 
 			Vector2 spaceOrigin = new Vector2(8, 8);
 
@@ -330,6 +544,9 @@ namespace PuzzleGame
 							break;
 						case BoardSpace.PillLower:
 							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], MathHelper.PiOver2 * 3, spaceOrigin, SpriteEffects.None, 0.5f);
+							break;
+						case BoardSpace.Popping:
+							SpriteBatch.Draw(Game1.Blocks, drawRect, popSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
 							break;
 						default:
 							break;

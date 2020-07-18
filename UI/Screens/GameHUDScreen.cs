@@ -25,17 +25,17 @@ namespace PuzzleGame.UI
 			{
 				//g1.UI.TogglePause();
 			};
-			//var score = new TextPanel(game)
-			//{
-			//	Text = "0",
-			//	HAnchor = HorizontalAnchor.Left,
-			//	VAnchor = VerticalAnchor.Top
-			//};
-			//retVal.Children.Add(score);
-			//retVal.Children[^1].UpdateEvent += (sender, e) =>
-			//{
-			//	score.Text = ((Game1)game).Score.ToString();
-			//};
+			var score = new TextPanel(game)
+			{
+				Text = "0",
+				HAnchor = HorizontalAnchor.Left,
+				VAnchor = VerticalAnchor.Top
+			};
+			retVal.Children.Add(score);
+			retVal.Children[^1].UpdateEvent += (sender, e) =>
+			{
+				score.Text = g1.Board.Points.ToString();
+			};
 			retVal.UpdateLayout(retVal.Bounds);
 			return retVal;
 		}
