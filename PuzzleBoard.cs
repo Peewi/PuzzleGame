@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PuzzleGame.UI;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -271,8 +272,11 @@ namespace PuzzleGame
 					{
 						Board[CursorPos.X, CursorPos.Y].Item1 = CursorUpright ? BoardSpace.PillLower : BoardSpace.PillLeft;
 						Board[CursorPos.X, CursorPos.Y].Item2 = CursorColor1;
-						Board[pos2.X, pos2.Y].Item1 = CursorUpright ? BoardSpace.PillUpper : BoardSpace.PillRight;
-						Board[pos2.X, pos2.Y].Item2 = CursorColor2;
+						if (pos2.Y >= 0)
+						{
+							Board[pos2.X, pos2.Y].Item1 = CursorUpright ? BoardSpace.PillUpper : BoardSpace.PillRight;
+							Board[pos2.X, pos2.Y].Item2 = CursorColor2; 
+						}
 						CursorActive = false;
 						Pop4InARow();
 						State = PuzzleGameState.Popping;
@@ -293,6 +297,10 @@ namespace PuzzleGame
 					ClearPopped();
 					State = PuzzleGameState.Cascading;
 					StateTime = 0;
+				}
+				if (VirusCount == 0)
+				{
+					State = PuzzleGameState.Victory;
 				}
 			}
 			else if (State == PuzzleGameState.Cascading)
@@ -315,6 +323,14 @@ namespace PuzzleGame
 					}
 				}
 			}
+			else if (State == PuzzleGameState.GameOver)
+			{
+				Game1.UI.OpenScreen(UIScreen.GameOverScreen(Game1));
+			}
+			else if (State == PuzzleGameState.Victory)
+			{
+				Game1.UI.OpenScreen(UIScreen.LevelCompleteScreen(Game1));
+			}
 			// pause button
 			if (Game1.Input.Pause)
 			{
@@ -331,6 +347,11 @@ namespace PuzzleGame
 			// TODO: grab bag
 			CursorColor1 = RNG.Next(3);
 			CursorColor2 = RNG.Next(3);
+
+			if (Board[3, 0].Item1 != BoardSpace.Blank || Board[4, 0].Item1 != BoardSpace.Blank)
+			{
+				State = PuzzleGameState.GameOver;
+			}
 		}
 		/// <summary>
 		/// Make freefloating pills fall 1 row.
@@ -465,7 +486,9 @@ namespace PuzzleGame
 							checkOffset.Y = -1;
 							break;
 					}
-					if (checkOffset != Point.Zero && Board[i + checkOffset.X, j + checkOffset.Y].Item1 == BoardSpace.Popping)
+					if (checkOffset != Point.Zero 
+						&& (j + checkOffset.Y < 0
+						|| Board[i + checkOffset.X, j + checkOffset.Y].Item1 == BoardSpace.Popping))
 					{
 						Board[i, j].Item1 = BoardSpace.PillRound;
 					}

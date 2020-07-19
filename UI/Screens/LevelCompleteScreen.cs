@@ -47,7 +47,7 @@ namespace PuzzleGame.UI
 				if (game is Game1 g1)
 				{
 					g1.UI.CloseTopScreen();
-					//g1.Board.NextLevel();
+					g1.Board.NewGame(g1.Board.CurrentLevel + 1);
 				}
 			};
 			//var q = new Button(game)

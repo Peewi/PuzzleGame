@@ -32,23 +32,23 @@ namespace PuzzleGame.UI
 			spLabel.Children.Add(go);
 			var score = new TextPanel(game)
 			{
-				Text = $"You scored {((Game1)game).Score} points",
+				Text = $"You scored {((Game1)game).Board.Points} points",
 				SpriteBackground = false
 			};
 			spLabel.Children.Add(score);
 			spLabel.Children.Add(spMenu);
-			var ng = new Button(game)
-			{
-				Text = "New Game"
-			};
-			spMenu.Children.Add(ng);
-			spMenu.Children[^1].OnClick += (snder, e) =>
-			{
-				if (game is Game1 g1)
-				{
-					//g1.NewGame();
-				}
-			};
+			//var ng = new Button(game)
+			//{
+			//	Text = "New Game"
+			//};
+			//spMenu.Children.Add(ng);
+			//spMenu.Children[^1].OnClick += (snder, e) =>
+			//{
+			//	if (game is Game1 g1)
+			//	{
+			//		g1.NewGame();
+			//	}
+			//};
 			var q = new Button(game)
 			{
 				Text = "Quit"
