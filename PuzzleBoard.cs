@@ -35,7 +35,10 @@ namespace PuzzleGame
 		Camera Camera => Game1.Camera;
 		Vector2 TopLeft;
 		Random RNG;
-		public int Points = 0;
+		public int Points { get; private set; } = 0;
+		public int VirusCount { get; private set; } = 0;
+		public int CurrentLevel { get; private set; } = 0;
+		public int Speed { get; private set; } = 0; //TODO: Make Low, Mid, Hi
 		int SpeedMulti = 1;
 		int CurrentMulti = 1;
 		int InputDir = 0;
@@ -81,6 +84,8 @@ namespace PuzzleGame
 			Board = new (BoardSpace, int)[BOARDWIDTH, BOARDHEIGHT];
 			RNG = new Random();
 			CursorActive = false;
+			VirusCount = 0;
+			CurrentLevel = level;
 			State = PuzzleGameState.InControl;
 			int maxRow = BOARDHEIGHT - 10;
 			if (level >= 15)
@@ -153,6 +158,7 @@ namespace PuzzleGame
 							else
 							{
 								Board[i, j] = (BoardSpace.Virus, k - 1);
+								VirusCount++;
 							}
 							colorsPlaced[k]++;
 							if (k != 0)
@@ -415,6 +421,7 @@ namespace PuzzleGame
 								{
 									Points += 100 * CurrentMulti * SpeedMulti;
 									CurrentMulti++;
+									VirusCount--;
 								}
 								Board[i + k, j].Item1 = BoardSpace.Popping;
 								changed = true;
@@ -428,6 +435,7 @@ namespace PuzzleGame
 								{
 									Points += 100 * CurrentMulti * SpeedMulti;
 									CurrentMulti++;
+									VirusCount--;
 								}
 								Board[i, j + k].Item1 = BoardSpace.Popping;
 								changed = true;
