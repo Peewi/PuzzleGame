@@ -214,9 +214,10 @@ namespace PuzzleGame
 			// Here comes George, in control
 			if (State == PuzzleGameState.InControl)
 			{
-				if (Input.JustPressed(Actions.Up))
+				if (Input.JustPressed(Actions.RotateRight) || Input.JustPressed(Actions.RotateLeft))
 				{
 					CursorUpright = !CursorUpright;
+					bool rotated = true;
 					if (!IsEmpty(CursorPosPart2))
 					{
 						Point kickLeft = new Point(-1, 0);
@@ -234,9 +235,12 @@ namespace PuzzleGame
 						else
 						{
 							CursorUpright = !CursorUpright;
+							rotated = false;
 						}
 					}
-					else if (!CursorUpright)
+					if (rotated
+						&& ((!CursorUpright && Input.JustPressed(Actions.RotateRight))
+						|| (CursorUpright && Input.JustPressed(Actions.RotateLeft))))
 					{
 						int tmp = CursorColor1;
 						CursorColor1 = CursorColor2;

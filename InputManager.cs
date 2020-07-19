@@ -125,7 +125,7 @@ namespace PuzzleGame
 		/// <summary>
 		/// The actions that should appear in the keybindings menu
 		/// </summary>
-		public Actions[] BindableActions = { Actions.Up, Actions.Down, Actions.Left, Actions.Right, Actions.RotateLeft, Actions.RotateRight };
+		public Actions[] BindableActions = { Actions.Down, Actions.Left, Actions.Right, Actions.RotateLeft, Actions.RotateRight };
 		Buttons[] BindableButtons = new Buttons[]
 			{
 				Buttons.A,
@@ -140,14 +140,14 @@ namespace PuzzleGame
 				Buttons.DPadDown,
 				Buttons.DPadLeft,
 				Buttons.DPadRight,
-				//Buttons.LeftThumbstickUp,
-				//Buttons.LeftThumbstickDown,
-				//Buttons.LeftThumbstickLeft,
-				//Buttons.LeftThumbstickRight,
-				//Buttons.RightThumbstickUp,
-				//Buttons.RightThumbstickDown,
-				//Buttons.RightThumbstickRight,
-				//Buttons.RightThumbstickLeft,
+				Buttons.LeftThumbstickUp,
+				Buttons.LeftThumbstickDown,
+				Buttons.LeftThumbstickLeft,
+				Buttons.LeftThumbstickRight,
+				Buttons.RightThumbstickUp,
+				Buttons.RightThumbstickDown,
+				Buttons.RightThumbstickRight,
+				Buttons.RightThumbstickLeft,
 				Buttons.Start,
 				Buttons.Back,
 				Buttons.LeftStick,
@@ -307,21 +307,24 @@ namespace PuzzleGame
 			SetKeybind(new Input(Buttons.B), MenuActions.Back);
 			SetKeybind(new Input(Buttons.Start), MenuActions.Pause);
 
-			SetKeybind(new Input(Keys.W), Actions.Up);
-			SetKeybind(new Input(Keys.S), Actions.Down);
-			SetKeybind(new Input(Keys.A), Actions.Left);
-			SetKeybind(new Input(Keys.D), Actions.Right);
-			SetKeybind(new Input(Keys.Up), Actions.Up);
+			//SetKeybind(new Input(Keys.W), Actions.Up);
+			//SetKeybind(new Input(Keys.S), Actions.Down);
+			//SetKeybind(new Input(Keys.A), Actions.Left);
+			//SetKeybind(new Input(Keys.D), Actions.Right);
+			SetKeybind(new Input(Keys.Up), Actions.RotateRight);
 			SetKeybind(new Input(Keys.Down), Actions.Down);
 			SetKeybind(new Input(Keys.Left), Actions.Left);
 			SetKeybind(new Input(Keys.Right), Actions.Right);
 			SetKeybind(new Input(Keys.Z), Actions.RotateLeft);
 			SetKeybind(new Input(Keys.X), Actions.RotateRight);
 
-			SetKeybind(new Input(Buttons.DPadUp), Actions.Up);
+			//SetKeybind(new Input(Buttons.DPadUp), Actions.Up);
 			SetKeybind(new Input(Buttons.DPadDown), Actions.Down);
 			SetKeybind(new Input(Buttons.DPadLeft), Actions.Left);
 			SetKeybind(new Input(Buttons.DPadRight), Actions.Right);
+			SetKeybind(new Input(Buttons.LeftThumbstickDown), Actions.Down);
+			SetKeybind(new Input(Buttons.LeftThumbstickLeft), Actions.Left);
+			SetKeybind(new Input(Buttons.LeftThumbstickRight), Actions.Right);
 			SetKeybind(new Input(Buttons.A), Actions.RotateLeft);
 			SetKeybind(new Input(Buttons.X), Actions.RotateRight);
 			SetKeybind(new Input(Buttons.B), Actions.RotateRight);

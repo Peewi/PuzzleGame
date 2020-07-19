@@ -95,38 +95,39 @@ namespace PuzzleGame.UI
 				row.Children.Add(keythingy);
 				spMenu.Children.Add(row);
 			}
-			var moveStickSP = new StackPanel(game)
-			{
-				Direction = LayoutDirection.Horizontal,
-				SpriteBackground = false,
-				ChildrenShareFocus = true
-			};
-			var moveStickLabel = new TextPanel(game)
-			{
-				Text = "Move stick",
-				SpriteBackground = false
-			};
-			moveStickSP.Children.Add(moveStickLabel);
-			var moveStickSelect = new SelectBox(game);
-			moveStickSelect.Options.Add(new SelectBoxOption("Left stick", Sticks.Left));
-			moveStickSelect.Options.Add(new SelectBoxOption("Right stick", Sticks.Right));
-			if (g1.Input.MovementStick == Sticks.Left)
-			{
-				moveStickSelect.Selected = 0;
-			}
-			else
-			{
-				moveStickSelect.Selected = 1;
-			}
-			moveStickSelect.SelectionChanged += (sender, e) =>
-			{
-				if (moveStickSelect.SelectedOption.Value is Sticks stick)
-				{
-					g1.Input.MovementStick = stick;
-				}
-			};
-			moveStickSP.Children.Add(moveStickSelect);
-			spMenu.Children.Add(moveStickSP);
+			//var moveStickSP = new StackPanel(game)
+			//{
+			//	Direction = LayoutDirection.Horizontal,
+			//	SpriteBackground = false,
+			//	ChildrenShareFocus = true
+			//};
+			//var moveStickLabel = new TextPanel(game)
+			//{
+			//	Text = "Move stick",
+			//	SpriteBackground = false
+			//};
+			//moveStickSP.Children.Add(moveStickLabel);
+			//var moveStickSelect = new SelectBox(game);
+			//moveStickSelect.Options.Add(new SelectBoxOption("Left stick", Sticks.Left));
+			//moveStickSelect.Options.Add(new SelectBoxOption("Right stick", Sticks.Right));
+			//if (g1.Input.MovementStick == Sticks.Left)
+			//{
+			//	moveStickSelect.Selected = 0;
+			//}
+			//else
+			//{
+			//	moveStickSelect.Selected = 1;
+			//}
+			//moveStickSelect.SelectionChanged += (sender, e) =>
+			//{
+			//	if (moveStickSelect.SelectedOption.Value is Sticks stick)
+			//	{
+			//		g1.Input.MovementStick = stick;
+			//	}
+			//};
+			//moveStickSP.Children.Add(moveStickSelect);
+			//spMenu.Children.Add(moveStickSP);
+
 			//var aimStickSP = new StackPanel(game)
 			//{
 			//	Direction = LayoutDirection.Horizontal,
