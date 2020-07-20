@@ -72,7 +72,8 @@ namespace PuzzleGame.UI
 			volume.Children.Add(volLabel);
 			var volSlide = new Slider(game)
 			{
-				Value = g1.Config.Config.Volume
+				Value = g1.Config.Config.Volume,
+				InputRepeatInterval = 1f / 40f
 			};
 			volSlide.ValueChanged += (sender, e) =>
 			{
