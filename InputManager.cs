@@ -716,7 +716,7 @@ namespace PuzzleGame
 		/// </summary>
 		/// <param name="action">action</param>
 		/// <returns><c>true</c> = pressed, <c>false</c> = not pressed</returns>
-		bool JustPressed(MenuActions action)
+		public bool JustPressed(MenuActions action)
 		{
 			if (MenuBinds.TryGetValue(action, out Input[] inputs))
 			{
