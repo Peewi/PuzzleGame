@@ -16,8 +16,14 @@ namespace PuzzleGame.UI
 		public float Value = 50;
 		public float IncrementSize = 1;
 		public event EventHandler ValueChanged;
+		public float InputRepeatDelay = 0.2f;
+		public float InputRepeatInterval = 0.1f;
+		float InputTimeHeld = 0;
+		int InputRepeatDir = 0;
 		int SliderColor = 1;
 		int FocusColor = 3;
+		int SliderValueX => (int)(Position.X + Width * (Value - Minimum) / (Maximum - Minimum));
+		Rectangle SliderGrabbyBounds => new Rectangle(SliderValueX - 16 / 2, (int)Position.Y, 16, 16);
 		bool grabbed = false;
 		public Slider(Game game) : base(game)
 		{
@@ -30,8 +36,9 @@ namespace PuzzleGame.UI
 		public override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
-			grabbed = grabbed || (game1.Input.Click && MouseIsOver);
-			grabbed = game1.Input.MouseIsDown ? grabbed : false;
+			bool mouseOverGrabby = Camera.ScreenRect(SliderGrabbyBounds).Contains(game1.Input.MousePos);
+			grabbed = grabbed || (game1.Input.Click && (MouseIsOver || mouseOverGrabby));
+			grabbed = game1.Input.MouseIsDown && grabbed;
 			if (grabbed)
 			{
 				var butt = Camera.WorldPos(game1.Input.MousePos);
@@ -48,13 +55,26 @@ namespace PuzzleGame.UI
 			if (HasFocus)
 			{
 				float newValue = Value;
-				if (game1.Input.MenuLeft)
+				if (game1.Input.JustPressed(MenuActions.Left))
 				{
 					newValue -= IncrementSize;
+					InputRepeatDir = -1;
+					InputTimeHeld = 0;
 				}
-				if (game1.Input.MenuRight)
+				else if (game1.Input.JustPressed(MenuActions.Right))
 				{
 					newValue += IncrementSize;
+					InputRepeatDir = 1;
+					InputTimeHeld = 0;
+				}
+				else if (game1.Input.Pressed(MenuActions.Left) || game1.Input.Pressed(MenuActions.Right))
+				{
+					InputTimeHeld += (float)gameTime.ElapsedGameTime.TotalSeconds;
+					if (InputTimeHeld >= InputRepeatDelay + InputRepeatInterval)
+					{
+						InputTimeHeld -= InputRepeatInterval;
+						newValue += IncrementSize * InputRepeatDir;
+					}
 				}
 				newValue = MathHelper.Clamp(newValue, Minimum, Maximum);
 				if (Value != newValue)
@@ -73,7 +93,7 @@ namespace PuzzleGame.UI
 			{
 				colorOffset = FocusColor * 6;
 			}
-			int sliderValX = (int)(Position.X + Width * (Value - Minimum) / (Maximum - Minimum));
+			int sliderValX = SliderValueX;
 
 			Rectangle lSrc = new Rectangle(3 * (SPRITESIZE + SPRITEMARGIN), 8 * (SPRITESIZE + SPRITEMARGIN), SPRITESIZE, SPRITESIZE);
 			Rectangle mSrc = new Rectangle(4 * (SPRITESIZE + SPRITEMARGIN), 8 * (SPRITESIZE + SPRITEMARGIN), SPRITESIZE, SPRITESIZE);
@@ -99,7 +119,6 @@ namespace PuzzleGame.UI
 			const float TEXTBASESCALE = 4;
 			float textScale = Camera.Scale / TEXTBASESCALE;
 			Vector2 textSize = Font.MeasureString(Value.ToString()) * textScale;
-			Vector2 sizeVector = new Vector2(Width, Height) * Camera.Scale;
 			Vector2 textPos = Camera.ScreenPos(new Vector2(sliderValX, Position.Y + Height / 2)) - textSize / 2;
 			SpriteBatch.DrawString(
 				Font,
