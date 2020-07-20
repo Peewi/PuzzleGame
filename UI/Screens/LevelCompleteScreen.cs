@@ -10,7 +10,10 @@ namespace PuzzleGame.UI
 	{
 		public static UIScreen LevelCompleteScreen(Game game)
 		{
-			var retVal = new UIScreen(game);
+			var retVal = new UIScreen(game)
+			{
+				ScreenBelowVisible = true
+			};
 			retVal.Purpose = ScreenPurpose.PauseMenu;
 			var spLabel = new StackPanel(game)
 			{

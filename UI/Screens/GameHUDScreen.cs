@@ -58,15 +58,15 @@ namespace PuzzleGame.UI
 			{
 				virus.Text = $"Viruses: {g1.Board.VirusCount}";
 			};
-			//var speed = new TextPanel(game)
-			//{
-			//	Text = "0"
-			//};
-			//sp.Children.Add(speed);
-			//sp.Children[^1].UpdateEvent += (sender, e) =>
-			//{
-			//	score.Text = $"Speed: {g1.Board.Speed}";
-			//};
+			var speed = new TextPanel(game)
+			{
+				Text = "0"
+			};
+			sp.Children.Add(speed);
+			sp.Children[^1].UpdateEvent += (sender, e) =>
+			{
+				speed.Text = $"Speed: {g1.Board.Speed}";
+			};
 			retVal.UpdateLayout(retVal.Bounds);
 			return retVal;
 		}

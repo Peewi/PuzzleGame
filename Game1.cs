@@ -29,7 +29,6 @@ namespace PuzzleGame
 		public PuzzleBoard Board;
 		public ConfigManager Config;
 		public SoundManager Sound;
-		public int Score = 0;
 		bool CurrentlyPlaying = false;
 
 		public Game1()
@@ -122,16 +121,16 @@ namespace PuzzleGame
 			Config.ApplyGraphics(graphics, Window);
 		}
 
-		public void NewGame(int level)
+		public void NewGame(int level, int speed)
 		{
 			UI.OpenScreen(UIScreen.GameHUDScreen(this));
 			Components.Remove(Board);
 			Board = new PuzzleBoard(this);
 			Board.NewGame(level);
+			Board.SetSpeed(speed);
 			Components.Add(Board);
 			Camera.Center = new Vector2(160, 90);
 			CurrentlyPlaying = true;
-			Score = 0;
 		}
 
 		public void MainMenu()

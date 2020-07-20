@@ -44,9 +44,9 @@ namespace PuzzleGame
 		int CurrentMulti = 1;
 		int InputDir = 0;
 		float InputTimeHeld = 0;
-		float InputRepeatDelay = 0.4f;
+		float InputRepeatDelay = 0.2f;
 		float InputRepeatInterval = 0.1f;
-		float DropInterval = 0.75f;
+		float DropInterval => DropSpeeds[StartSpeedIndex[Speed]];
 		float DropTime = 0;
 		Point CursorPos = new Point(3, 0);
 		Point CursorPosPart2 => CursorPos + (CursorUpright ? new Point(0, -1) : new Point(1, 0));
@@ -60,6 +60,94 @@ namespace PuzzleGame
 		const int BOARDWIDTH = 8;
 		const int BOARDHEIGHT = 16;
 		const int TILESIZE = 8;
+		int[] StartSpeedIndex = { 0, 15, 25, 31 };
+		/// <summary>
+		/// Definitions for speed levels (how long it takes a block to drop one row).
+		/// Taken from NTSC NES Dr. Mario (https://tetris.wiki/Dr._Mario). Expressed here in time in seconds, rather than number of frames.
+		/// </summary>
+		float[] DropSpeeds = {
+			1f / 60f * 70f,
+			1f / 60f * 68f,
+			1f / 60f * 66f,
+			1f / 60f * 64f,
+			1f / 60f * 62f,
+			1f / 60f * 60f,
+			1f / 60f * 58f,
+			1f / 60f * 56f,
+			1f / 60f * 54f,
+			1f / 60f * 52f,
+			1f / 60f * 50f,
+			1f / 60f * 48f,
+			1f / 60f * 46f,
+			1f / 60f * 44f,
+			1f / 60f * 42f,
+			1f / 60f * 40f,
+			1f / 60f * 38f,
+			1f / 60f * 36f,
+			1f / 60f * 34f,
+			1f / 60f * 32f,
+			1f / 60f * 30f,
+			1f / 60f * 28f,
+			1f / 60f * 26f,
+			1f / 60f * 24f,
+			1f / 60f * 22f,
+			1f / 60f * 20f,
+			1f / 60f * 19f,
+			1f / 60f * 18f,
+			1f / 60f * 17f,
+			1f / 60f * 16f,
+			1f / 60f * 15f,
+			1f / 60f * 14f,
+			1f / 60f * 13f,
+			1f / 60f * 12f,
+			1f / 60f * 11f,
+			1f / 60f * 10f,
+			1f / 60f * 10f,
+			1f / 60f * 9f,
+			1f / 60f * 9f,
+			1f / 60f * 8f,
+			1f / 60f * 8f,
+			1f / 60f * 7f,
+			1f / 60f * 7f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 6f,
+			1f / 60f * 5f,
+			1f / 60f * 5f,
+			1f / 60f * 5f,
+			1f / 60f * 5f,
+			1f / 60f * 5f,
+			1f / 60f * 4f,
+			1f / 60f * 4f,
+			1f / 60f * 4f,
+			1f / 60f * 4f,
+			1f / 60f * 4f,
+			1f / 60f * 3f,
+			1f / 60f * 3f,
+			1f / 60f * 3f,
+			1f / 60f * 3f,
+			1f / 60f * 3f,
+			1f / 60f * 2f,
+			1f / 60f * 2f,
+			1f / 60f * 2f,
+			1f / 60f * 2f,
+			1f / 60f * 2f,
+			1f / 60f * 2f,
+			1f / 60f * 2f,
+			1f / 60f * 2f,
+			1f / 60f * 2f,
+			1f / 60f * 2f,
+			1f / 60f * 1f
+		};
 
 		Color[] Colors = { Color.Red, Color.Blue, Color.Yellow };
 		(BoardSpace, int)[,] Board = new (BoardSpace, int)[BOARDWIDTH, BOARDHEIGHT];
@@ -104,7 +192,7 @@ namespace PuzzleGame
 			int cellsLeft = BOARDWIDTH * (BOARDHEIGHT - maxRow);
 			int virusesLeft = (level + 1) * 4;
 			int[] colorsPlaced = new int[4];
-			for (int j = BOARDHEIGHT-1; j >= maxRow; j--)
+			for (int j = BOARDHEIGHT - 1; j >= maxRow; j--)
 			{
 				for (int i = 0; i < BOARDWIDTH; i++)
 				{
@@ -164,7 +252,7 @@ namespace PuzzleGame
 							colorsPlaced[k]++;
 							if (k != 0)
 							{
-								virusesLeft--; 
+								virusesLeft--;
 							}
 							break;
 						}
@@ -177,6 +265,12 @@ namespace PuzzleGame
 			{
 				NewGame(level);
 			}
+		}
+
+		public void SetSpeed(int speed)
+		{
+			Speed = MathHelper.Clamp(speed, 1, 3);
+			SpeedMulti = Speed;
 		}
 
 		public override void Update(GameTime gameTime)
@@ -279,7 +373,7 @@ namespace PuzzleGame
 						if (pos2.Y >= 0)
 						{
 							Board[pos2.X, pos2.Y].Item1 = CursorUpright ? BoardSpace.PillUpper : BoardSpace.PillRight;
-							Board[pos2.X, pos2.Y].Item2 = CursorColor2; 
+							Board[pos2.X, pos2.Y].Item2 = CursorColor2;
 						}
 						CursorActive = false;
 						Pop4InARow();
@@ -301,10 +395,10 @@ namespace PuzzleGame
 					ClearPopped();
 					State = PuzzleGameState.Cascading;
 					StateTime = 0;
-				}
-				if (VirusCount == 0)
-				{
-					State = PuzzleGameState.Victory;
+					if (VirusCount == 0)
+					{
+						State = PuzzleGameState.Victory;
+					}
 				}
 			}
 			else if (State == PuzzleGameState.Cascading)
@@ -386,7 +480,7 @@ namespace PuzzleGame
 						if (Board[i, j + 1].Item1 == BoardSpace.Blank)
 						{
 							Board[i, j + 1] = Board[i, j];
-							Board[i, j] = Board[i, j -1 ];
+							Board[i, j] = Board[i, j - 1];
 							Board[i, j - 1] = (BoardSpace.Blank, 0);
 							changed = true;
 						}
@@ -421,7 +515,7 @@ namespace PuzzleGame
 			{
 				for (int i = 0; i < BOARDWIDTH; i++)
 				{
-					if (Board[i,j].Item1 != BoardSpace.Blank)
+					if (Board[i, j].Item1 != BoardSpace.Blank)
 					{
 						int rowColor = Board[i, j].Item2;
 						int row = 1;
@@ -430,7 +524,7 @@ namespace PuzzleGame
 						{
 							if (i + k < BOARDWIDTH)
 							{
-								row += (Board[i + k, j].Item2 == rowColor && Board[i + k, j].Item1 != BoardSpace.Blank) ? 1 : 0; 
+								row += (Board[i + k, j].Item2 == rowColor && Board[i + k, j].Item1 != BoardSpace.Blank) ? 1 : 0;
 							}
 							if (j + k < BOARDHEIGHT)
 							{
@@ -490,7 +584,7 @@ namespace PuzzleGame
 							checkOffset.Y = -1;
 							break;
 					}
-					if (checkOffset != Point.Zero 
+					if (checkOffset != Point.Zero
 						&& (j + checkOffset.Y < 0
 						|| Board[i + checkOffset.X, j + checkOffset.Y].Item1 == BoardSpace.Popping))
 					{
@@ -511,7 +605,7 @@ namespace PuzzleGame
 			{
 				for (int i = 0; i < BOARDWIDTH; i++)
 				{
-					if (Board[i,j].Item1 == BoardSpace.Popping)
+					if (Board[i, j].Item1 == BoardSpace.Popping)
 					{
 						Board[i, j] = (BoardSpace.Blank, 0);
 						changed = true;
@@ -563,7 +657,7 @@ namespace PuzzleGame
 						case BoardSpace.Blank:
 							break;
 						case BoardSpace.Virus:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, blockSrc, Colors[Board[i, j].Item2], 0,spaceOrigin, SpriteEffects.None, 0.5f);
+							SpriteBatch.Draw(Game1.Blocks, drawRect, blockSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
 							break;
 						case BoardSpace.PillRound:
 							SpriteBatch.Draw(Game1.Blocks, drawRect, roundSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);

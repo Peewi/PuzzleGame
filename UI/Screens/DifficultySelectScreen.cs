@@ -72,9 +72,40 @@ namespace PuzzleGame.UI
 			};
 			diffSlide.ValueChanged += (sender, e) =>
 			{
-				g1.Config.NewConfig.Volume = (int)diffSlide.Value;
+				
 			};
 			difficulty.Children.Add(diffSlide);
+			//
+			var speed = new StackPanel(game)
+			{
+				Direction = LayoutDirection.Horizontal,
+				HAnchor = HorizontalAnchor.Left,
+				ChildrenShareFocus = true,
+				SpriteBackground = true,
+				Border = 4,
+				Width = 128
+			};
+			spMenu.Children.Add(speed);
+			var speedLabel = new TextPanel(game)
+			{
+				Text = "Speed",
+				Width = 32,
+				SpriteBackground = false
+			};
+			speed.Children.Add(speedLabel);
+			var speedSlide = new Slider(game)
+			{
+				Width = 32,
+				Value = 1,
+				Minimum = 1,
+				Maximum = 3,
+				IncrementSize = 1
+			};
+			speedSlide.ValueChanged += (sender, e) =>
+			{
+				
+			};
+			speed.Children.Add(speedSlide);
 			// 
 			var okCancelRow = new StackPanel(game)
 			{
@@ -97,7 +128,7 @@ namespace PuzzleGame.UI
 			};
 			newGame.OnClick += (snder, e) =>
 			{
-				g1.NewGame((int)diffSlide.Value);
+				g1.NewGame((int)diffSlide.Value, (int)speedSlide.Value);
 			};
 			okCancelRow.Children.Add(newGame);
 			retVal.UpdateLayout(retVal.Bounds);
