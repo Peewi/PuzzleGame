@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using PuzzleGame.UI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace PuzzleGame
@@ -54,6 +55,8 @@ namespace PuzzleGame
 		bool CursorUpright = false;
 		int CursorColor1 = 0;
 		int CursorColor2 = 1;
+		(int, int)[] UpcomingPieces;
+		int NextPieceIndex = 0;
 		PuzzleGameState State = PuzzleGameState.InControl;
 		float StateTime = 0;
 		float CascadeRowTime = 0.25f;
@@ -172,6 +175,10 @@ namespace PuzzleGame
 			// https://www.researchgate.net/publication/334724493_Dr_Mario_Puzzle_Generation_Theory_Practice_History_FamicomNES
 			Board = new (BoardSpace, int)[BOARDWIDTH, BOARDHEIGHT];
 			RNG = new Random();
+			NextPieceIndex = 0;
+			UpcomingPieces = new (int, int)[18];
+			SetUpcoming();
+			SetUpcoming();
 			CursorActive = false;
 			VirusCount = 0;
 			CurrentLevel = level;
@@ -271,6 +278,27 @@ namespace PuzzleGame
 		{
 			Speed = MathHelper.Clamp(speed, 1, 3);
 			SpeedMulti = Speed;
+		}
+
+		void SetUpcoming()
+		{
+			(int, int)[] things = {
+				(0, 0),
+				(0, 1),
+				(0, 2),
+				(1, 0),
+				(1, 1),
+				(1, 2),
+				(2, 0),
+				(2, 1),
+				(2, 2),
+			};
+			things = things.OrderBy(x => RNG.Next()).ToArray();
+			for (int i = 0; i < 9; i++)
+			{
+				UpcomingPieces[i] = UpcomingPieces[i + 9];
+				UpcomingPieces[i + 9] = things[i];
+			}
 		}
 
 		public override void Update(GameTime gameTime)
@@ -443,8 +471,14 @@ namespace PuzzleGame
 			CursorPos = new Point(3, 0);
 			CursorUpright = false;
 			// TODO: grab bag
-			CursorColor1 = RNG.Next(3);
-			CursorColor2 = RNG.Next(3);
+			CursorColor1 = UpcomingPieces[NextPieceIndex].Item1;
+			CursorColor2 = UpcomingPieces[NextPieceIndex].Item2;
+			NextPieceIndex++;
+			if (NextPieceIndex == 9)
+			{
+				NextPieceIndex = 0;
+				SetUpcoming();
+			}
 
 			if (Board[3, 0].Item1 != BoardSpace.Blank || Board[4, 0].Item1 != BoardSpace.Blank)
 			{
@@ -684,8 +718,8 @@ namespace PuzzleGame
 			}
 			if (CursorActive)
 			{
-				Rectangle currentPill1 = new Rectangle((int)TopLeft.X + 4 + CursorPos.X * TILESIZE, (int)TopLeft.Y + 4 + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
-				Rectangle currentPill2 = new Rectangle((int)TopLeft.X + 4 + CursorPos.X * TILESIZE, (int)TopLeft.Y + 4 + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
+				Rectangle currentPill1 = new Rectangle((int)TopLeft.X + 4 + CursorPos.X * TILESIZE, (int)TopLeft.Y + 5 + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
+				Rectangle currentPill2 = new Rectangle((int)TopLeft.X + 4 + CursorPos.X * TILESIZE, (int)TopLeft.Y + 5 + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
 				float rot1, rot2;
 				if (CursorUpright)
 				{
@@ -703,6 +737,34 @@ namespace PuzzleGame
 				currentPill2 = Camera.ScreenRect(currentPill2);
 				SpriteBatch.Draw(Game1.Blocks, currentPill1, pillSrc, Colors[CursorColor1], rot1, spaceOrigin, SpriteEffects.None, 0.5f);
 				SpriteBatch.Draw(Game1.Blocks, currentPill2, pillSrc, Colors[CursorColor2], rot2, spaceOrigin, SpriteEffects.None, 0.5f);
+			}
+			Vector2 upcomingPos = TopLeft;
+			upcomingPos.X += TILESIZE * BOARDWIDTH + 1;
+
+			if (true)
+			{
+				Rectangle upcomingLeft = new Rectangle((int)upcomingPos.X + 4, (int)upcomingPos.Y + 4 * TILESIZE, TILESIZE, TILESIZE);
+				Rectangle upcomingRight = new Rectangle((int)upcomingPos.X + 4 + TILESIZE, (int)upcomingPos.Y + 4 * TILESIZE, TILESIZE, TILESIZE);
+				upcomingLeft = Camera.ScreenRect(upcomingLeft);
+				upcomingRight = Camera.ScreenRect(upcomingRight);
+				SpriteBatch.Draw(Game1.Blocks, upcomingLeft, pillSrc, Colors[UpcomingPieces[NextPieceIndex].Item1], 0, spaceOrigin, SpriteEffects.None, 0.5f);
+				SpriteBatch.Draw(Game1.Blocks, upcomingRight, pillSrc, Colors[UpcomingPieces[NextPieceIndex].Item2], MathHelper.Pi, spaceOrigin, SpriteEffects.None, 0.5f);
+			}
+			else
+			{
+				// draw full queue
+				Rectangle currentIndicator = new Rectangle((int)upcomingPos.X, (int)upcomingPos.Y + NextPieceIndex * TILESIZE, TILESIZE * 3, TILESIZE);
+				currentIndicator = Camera.ScreenRect(currentIndicator);
+				SpriteBatch.Draw(Game1.Pixel, currentIndicator, null, Color.White, 0, Vector2.Zero, SpriteEffects.None, 0.5f);
+				for (int i = 0; i < UpcomingPieces.Length; i++)
+				{
+					Rectangle upcomingLeft = new Rectangle((int)upcomingPos.X + 4, (int)upcomingPos.Y + 4 + i * TILESIZE, TILESIZE, TILESIZE);
+					Rectangle upcomingRight = new Rectangle((int)upcomingPos.X + 4 + TILESIZE, (int)upcomingPos.Y + 4 + i * TILESIZE, TILESIZE, TILESIZE);
+					upcomingLeft = Camera.ScreenRect(upcomingLeft);
+					upcomingRight = Camera.ScreenRect(upcomingRight);
+					SpriteBatch.Draw(Game1.Blocks, upcomingLeft, pillSrc, Colors[UpcomingPieces[i].Item1], 0, spaceOrigin, SpriteEffects.None, 0.5f);
+					SpriteBatch.Draw(Game1.Blocks, upcomingRight, pillSrc, Colors[UpcomingPieces[i].Item2], MathHelper.Pi, spaceOrigin, SpriteEffects.None, 0.5f);
+				}
 			}
 		}
 	}
