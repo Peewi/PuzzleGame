@@ -84,7 +84,7 @@ namespace PuzzleGame
 			// TODO: use this.Content to load your game content here
 			circle = Content.Load<Texture2D>("circle");
 			Circle8px = Content.Load<Texture2D>("circle8px");
-			Blocks = Content.Load<Texture2D>("blocks");
+			Blocks = Content.Load<Texture2D>("blocksv2");
 			Happy = Content.Load<Texture2D>("Happy");
 			Mad = Content.Load<Texture2D>("Mad");
 			Splosion = Content.Load<Texture2D>("splosion");

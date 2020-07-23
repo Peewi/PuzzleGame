@@ -10,14 +10,14 @@ namespace PuzzleGame
 {
 	enum BoardSpace
 	{
-		Blank,
-		Virus,
-		PillRound,
-		PillLeft,
-		PillRight,
-		PillUpper,
-		PillLower,
-		Popping
+		Blank = 0,
+		Virus = 1,
+		PillLeft = 2,
+		PillRight = 3,
+		PillUpper = 4,
+		PillLower = 5,
+		PillRound = 6,
+		Popping = 7
 	}
 
 	enum PuzzleGameState
@@ -68,7 +68,7 @@ namespace PuzzleGame
 		/// Definitions for speed levels (how long it takes a block to drop one row).
 		/// Taken from NTSC NES Dr. Mario (https://tetris.wiki/Dr._Mario). Expressed here in time in seconds, rather than number of frames.
 		/// </summary>
-		float[] DropSpeeds = {
+		readonly float[] DropSpeeds = {
 			1f / 60f * 70f,
 			1f / 60f * 68f,
 			1f / 60f * 66f,
@@ -151,7 +151,29 @@ namespace PuzzleGame
 			1f / 60f * 2f,
 			1f / 60f * 1f
 		};
-
+		const int SPRITESIZE = 16;
+		/// <summary>
+		/// Spritesheet source rectangles. Matches <c>(int)Boardspace - 1</c>
+		/// </summary>
+		readonly Rectangle[] SpriteSrc =
+		{
+			new Rectangle(0 * SPRITESIZE, 0, SPRITESIZE, SPRITESIZE),
+			new Rectangle(1 * SPRITESIZE, 0, SPRITESIZE, SPRITESIZE),
+			new Rectangle(2 * SPRITESIZE, 0, SPRITESIZE, SPRITESIZE),
+			new Rectangle(3 * SPRITESIZE, 0, SPRITESIZE, SPRITESIZE),
+			new Rectangle(4 * SPRITESIZE, 0, SPRITESIZE, SPRITESIZE),
+			new Rectangle(5 * SPRITESIZE, 0, SPRITESIZE, SPRITESIZE),
+			new Rectangle(6 * SPRITESIZE, 0, SPRITESIZE, SPRITESIZE),
+			new Rectangle(7 * SPRITESIZE, 0, SPRITESIZE, SPRITESIZE),
+			new Rectangle(0 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE),
+			new Rectangle(1 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE),
+			new Rectangle(2 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE),
+			new Rectangle(3 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE),
+			new Rectangle(4 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE),
+			new Rectangle(5 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE),
+			new Rectangle(6 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE),
+			new Rectangle(7 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE)
+		};
 		Color[] Colors = { Color.Red, Color.Blue, Color.Yellow };
 		(BoardSpace, int)[,] Board = new (BoardSpace, int)[BOARDWIDTH, BOARDHEIGHT];
 
@@ -667,16 +689,8 @@ namespace PuzzleGame
 		public override void Draw(GameTime gameTime)
 		{
 			Rectangle bg = new Rectangle((int)TopLeft.X, (int)TopLeft.Y, BOARDWIDTH * TILESIZE, BOARDHEIGHT * TILESIZE);
-			Rectangle cursor = new Rectangle((int)TopLeft.X + CursorPos.X * TILESIZE, (int)TopLeft.Y + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
 			bg = Camera.ScreenRect(bg);
-			cursor = Camera.ScreenRect(cursor);
 			SpriteBatch.Draw(Game1.Pixel, bg, Color.Black);
-			SpriteBatch.Draw(Game1.Pixel, cursor, Color.White);
-
-			Rectangle blockSrc = new Rectangle(0, 0, 16, 16);
-			Rectangle pillSrc = new Rectangle(0, 16, 16, 16);
-			Rectangle roundSrc = new Rectangle(16, 16, 16, 16);
-			Rectangle popSrc = new Rectangle(48, 16, 16, 16);
 
 			Vector2 spaceOrigin = new Vector2(8, 8);
 
@@ -684,35 +698,12 @@ namespace PuzzleGame
 			{
 				for (int j = 0; j < BOARDHEIGHT; j++)
 				{
-					Rectangle drawRect = new Rectangle((int)TopLeft.X + 4 + i * TILESIZE, (int)TopLeft.Y + 4 + j * TILESIZE, TILESIZE, TILESIZE);
-					drawRect = Camera.ScreenRect(drawRect);
-					switch (Board[i, j].Item1)
+					if (Board[i, j].Item1 != BoardSpace.Blank)
 					{
-						case BoardSpace.Blank:
-							break;
-						case BoardSpace.Virus:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, blockSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
-							break;
-						case BoardSpace.PillRound:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, roundSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
-							break;
-						case BoardSpace.PillLeft:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
-							break;
-						case BoardSpace.PillRight:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], MathHelper.Pi, spaceOrigin, SpriteEffects.None, 0.5f);
-							break;
-						case BoardSpace.PillUpper:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], MathHelper.PiOver2, spaceOrigin, SpriteEffects.None, 0.5f);
-							break;
-						case BoardSpace.PillLower:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, pillSrc, Colors[Board[i, j].Item2], MathHelper.PiOver2 * 3, spaceOrigin, SpriteEffects.None, 0.5f);
-							break;
-						case BoardSpace.Popping:
-							SpriteBatch.Draw(Game1.Blocks, drawRect, popSrc, Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
-							break;
-						default:
-							break;
+						Rectangle drawRect = new Rectangle((int)TopLeft.X + 4 + i * TILESIZE, (int)TopLeft.Y + 4 + j * TILESIZE, TILESIZE, TILESIZE);
+						drawRect = Camera.ScreenRect(drawRect);
+						SpriteBatch.Draw(Game1.Blocks, drawRect, SpriteSrc[(int)Board[i, j].Item1 - 1], Colors[Board[i, j].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
+						SpriteBatch.Draw(Game1.Blocks, drawRect, SpriteSrc[(int)Board[i, j].Item1 - 1 + 8], Color.White, 0, spaceOrigin, SpriteEffects.None, 0.5f);
 					}
 				}
 			}
@@ -720,52 +711,42 @@ namespace PuzzleGame
 			{
 				Rectangle currentPill1 = new Rectangle((int)TopLeft.X + 4 + CursorPos.X * TILESIZE, (int)TopLeft.Y + 5 + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
 				Rectangle currentPill2 = new Rectangle((int)TopLeft.X + 4 + CursorPos.X * TILESIZE, (int)TopLeft.Y + 5 + CursorPos.Y * TILESIZE, TILESIZE, TILESIZE);
-				float rot1, rot2;
+				int src1, src2;
 				if (CursorUpright)
 				{
 					currentPill2.Y -= TILESIZE;
-					rot1 = MathHelper.PiOver2 * 3;
-					rot2 = MathHelper.PiOver2;
+					src1 = 4;
+					src2 = 3;
 				}
 				else
 				{
 					currentPill2.X += TILESIZE;
-					rot1 = 0;
-					rot2 = MathHelper.Pi;
+					src1 = 1;
+					src2 = 2;
 				}
+				int hilight1 = src1;
+				hilight1 += 8;
+				int hilight2 = src2;
+				hilight2 += 8;
 				currentPill1 = Camera.ScreenRect(currentPill1);
 				currentPill2 = Camera.ScreenRect(currentPill2);
-				SpriteBatch.Draw(Game1.Blocks, currentPill1, pillSrc, Colors[CursorColor1], rot1, spaceOrigin, SpriteEffects.None, 0.5f);
-				SpriteBatch.Draw(Game1.Blocks, currentPill2, pillSrc, Colors[CursorColor2], rot2, spaceOrigin, SpriteEffects.None, 0.5f);
+				SpriteBatch.Draw(Game1.Blocks, currentPill1, SpriteSrc[src1], Colors[CursorColor1], 0, spaceOrigin, SpriteEffects.None, 0.5f);
+				SpriteBatch.Draw(Game1.Blocks, currentPill2, SpriteSrc[src2], Colors[CursorColor2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
+				SpriteBatch.Draw(Game1.Blocks, currentPill1, SpriteSrc[hilight1], Color.White, 0, spaceOrigin, SpriteEffects.None, 0.5f);
+				SpriteBatch.Draw(Game1.Blocks, currentPill2, SpriteSrc[hilight2], Color.White, 0, spaceOrigin, SpriteEffects.None, 0.5f);
 			}
 			Vector2 upcomingPos = TopLeft;
 			upcomingPos.X += TILESIZE * BOARDWIDTH + 1;
 
-			if (true)
-			{
-				Rectangle upcomingLeft = new Rectangle((int)upcomingPos.X + 4, (int)upcomingPos.Y + 4 * TILESIZE, TILESIZE, TILESIZE);
-				Rectangle upcomingRight = new Rectangle((int)upcomingPos.X + 4 + TILESIZE, (int)upcomingPos.Y + 4 * TILESIZE, TILESIZE, TILESIZE);
-				upcomingLeft = Camera.ScreenRect(upcomingLeft);
-				upcomingRight = Camera.ScreenRect(upcomingRight);
-				SpriteBatch.Draw(Game1.Blocks, upcomingLeft, pillSrc, Colors[UpcomingPieces[NextPieceIndex].Item1], 0, spaceOrigin, SpriteEffects.None, 0.5f);
-				SpriteBatch.Draw(Game1.Blocks, upcomingRight, pillSrc, Colors[UpcomingPieces[NextPieceIndex].Item2], MathHelper.Pi, spaceOrigin, SpriteEffects.None, 0.5f);
-			}
-			else
-			{
-				// draw full queue
-				Rectangle currentIndicator = new Rectangle((int)upcomingPos.X, (int)upcomingPos.Y + NextPieceIndex * TILESIZE, TILESIZE * 3, TILESIZE);
-				currentIndicator = Camera.ScreenRect(currentIndicator);
-				SpriteBatch.Draw(Game1.Pixel, currentIndicator, null, Color.White, 0, Vector2.Zero, SpriteEffects.None, 0.5f);
-				for (int i = 0; i < UpcomingPieces.Length; i++)
-				{
-					Rectangle upcomingLeft = new Rectangle((int)upcomingPos.X + 4, (int)upcomingPos.Y + 4 + i * TILESIZE, TILESIZE, TILESIZE);
-					Rectangle upcomingRight = new Rectangle((int)upcomingPos.X + 4 + TILESIZE, (int)upcomingPos.Y + 4 + i * TILESIZE, TILESIZE, TILESIZE);
-					upcomingLeft = Camera.ScreenRect(upcomingLeft);
-					upcomingRight = Camera.ScreenRect(upcomingRight);
-					SpriteBatch.Draw(Game1.Blocks, upcomingLeft, pillSrc, Colors[UpcomingPieces[i].Item1], 0, spaceOrigin, SpriteEffects.None, 0.5f);
-					SpriteBatch.Draw(Game1.Blocks, upcomingRight, pillSrc, Colors[UpcomingPieces[i].Item2], MathHelper.Pi, spaceOrigin, SpriteEffects.None, 0.5f);
-				}
-			}
+			Rectangle upcomingLeft = new Rectangle((int)upcomingPos.X + 4, (int)upcomingPos.Y + 4 * TILESIZE, TILESIZE, TILESIZE);
+			Rectangle upcomingRight = new Rectangle((int)upcomingPos.X + 4 + TILESIZE, (int)upcomingPos.Y + 4 * TILESIZE, TILESIZE, TILESIZE);
+			upcomingLeft = Camera.ScreenRect(upcomingLeft);
+			upcomingRight = Camera.ScreenRect(upcomingRight);
+			SpriteBatch.Draw(Game1.Blocks, upcomingLeft, SpriteSrc[1], Colors[UpcomingPieces[NextPieceIndex].Item1], 0, spaceOrigin, SpriteEffects.None, 0.5f);
+			SpriteBatch.Draw(Game1.Blocks, upcomingLeft, SpriteSrc[1+8], Color.White, 0, spaceOrigin, SpriteEffects.None, 0.5f);
+			SpriteBatch.Draw(Game1.Blocks, upcomingRight, SpriteSrc[2], Colors[UpcomingPieces[NextPieceIndex].Item2], 0, spaceOrigin, SpriteEffects.None, 0.5f);
+			SpriteBatch.Draw(Game1.Blocks, upcomingRight, SpriteSrc[2 + 8], Color.White, 0, spaceOrigin, SpriteEffects.None, 0.5f);
+
 		}
 	}
 }
