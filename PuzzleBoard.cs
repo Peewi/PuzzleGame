@@ -41,13 +41,16 @@ namespace PuzzleGame
 		public int VirusCount { get; private set; } = 0;
 		public int CurrentLevel { get; private set; } = 0;
 		public int Speed { get; private set; } = 0; //TODO: Make Low, Mid, Hi
+		int SpeedIncrease = 0;
+		const int MAXSPEEDINCREASE = 49;
 		int SpeedMulti = 1;
+		int PiecesDropped = 0;
 		int CurrentMulti = 1;
 		int InputDir = 0;
 		float InputTimeHeld = 0;
 		float InputRepeatDelay = 0.2f;
 		float InputRepeatInterval = 0.1f;
-		float DropInterval => DropSpeeds[StartSpeedIndex[Speed]];
+		float DropInterval => DropSpeeds[StartSpeedIndex[Speed] + SpeedIncrease];
 		float DropTime = 0;
 		Point CursorPos = new Point(3, 0);
 		Point CursorPosPart2 => CursorPos + (CursorUpright ? new Point(0, -1) : new Point(1, 0));
@@ -174,7 +177,8 @@ namespace PuzzleGame
 			new Rectangle(6 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE),
 			new Rectangle(7 * SPRITESIZE, SPRITESIZE, SPRITESIZE, SPRITESIZE)
 		};
-		Color[] Colors = { Color.Red, Color.Blue, Color.Yellow };
+		readonly Color[] Colors = { Color.Red, Color.Blue, Color.Yellow };
+		const int NUMBEROFCOLORS = 3;
 		(BoardSpace, int)[,] Board = new (BoardSpace, int)[BOARDWIDTH, BOARDHEIGHT];
 
 		public PuzzleBoard(Game game) : base(game)
@@ -198,13 +202,15 @@ namespace PuzzleGame
 			Board = new (BoardSpace, int)[BOARDWIDTH, BOARDHEIGHT];
 			RNG = new Random();
 			NextPieceIndex = 0;
-			UpcomingPieces = new (int, int)[18];
+			UpcomingPieces = new (int, int)[NUMBEROFCOLORS * NUMBEROFCOLORS * 2];
 			SetUpcoming();
 			SetUpcoming();
 			CursorActive = false;
 			VirusCount = 0;
 			CurrentLevel = level;
 			State = PuzzleGameState.InControl;
+			PiecesDropped = 0;
+			SpeedIncrease = 0;
 			int maxRow = BOARDHEIGHT - 10;
 			if (level >= 15)
 			{
@@ -220,14 +226,18 @@ namespace PuzzleGame
 			}
 			int cellsLeft = BOARDWIDTH * (BOARDHEIGHT - maxRow);
 			int virusesLeft = (level + 1) * 4;
-			int[] colorsPlaced = new int[4];
+			int[] colorsPlaced = new int[NUMBEROFCOLORS + 1];
 			for (int j = BOARDHEIGHT - 1; j >= maxRow; j--)
 			{
 				for (int i = 0; i < BOARDWIDTH; i++)
 				{
 					float placeRoll = (float)RNG.NextDouble();
 					// 2-away rule
-					bool[] available = { true, true, true, true };
+					bool[] available = new bool[NUMBEROFCOLORS + 1];
+					for (int k = 0; k < NUMBEROFCOLORS + 1; k++)
+					{
+						available[k] = true;
+					}
 					if (i - 2 >= 0 && Board[i - 2, j].Item1 == BoardSpace.Virus)
 					{
 						available[Board[i - 2, j].Item2 + 1] = false;
@@ -237,34 +247,39 @@ namespace PuzzleGame
 						available[Board[i, j + 2].Item2 + 1] = false;
 					}
 					int numColorsAvailable = 0;
-					for (int k = 1; k < 4; k++)
+					for (int k = 1; k < NUMBEROFCOLORS + 1; k++)
 					{
 						numColorsAvailable += available[k] ? 1 : 0;
 					}
 					// chance stuff
-					float[] chanceSize = { cellsLeft - virusesLeft, 0, 0, 0 };
-					float[] colorChances = { cellsLeft - virusesLeft, 0, 0, 0 };
-					colorChances[0] /= cellsLeft;
+					float[] chanceSize = new float[NUMBEROFCOLORS + 1];
+					chanceSize[0] = cellsLeft - virusesLeft;
+					float[] colorChances = new float[NUMBEROFCOLORS + 1];
+					colorChances[0] = (cellsLeft - virusesLeft) / (float)cellsLeft;
 					float virusChance = 1 - colorChances[0];
-					int mostPlaced = Math.Max(Math.Max(colorsPlaced[0], colorsPlaced[1]), colorsPlaced[2]);
-					for (int k = 1; k < 4; k++)
+					int mostPlaced = colorsPlaced[0];
+					for (int k = 0; k < NUMBEROFCOLORS; k++)
+					{
+						mostPlaced = Math.Max(mostPlaced, colorsPlaced[k + 1]);
+					}
+					float combinedChanceSize = 0;
+					for (int k = 1; k < NUMBEROFCOLORS + 1; k++)
 					{
 						chanceSize[k] = available[k] ? (float)virusesLeft / numColorsAvailable : 0;
-						int below = colorsPlaced[k];
-						while (below < mostPlaced)
+						for (int l = colorsPlaced[k]; l < mostPlaced; l++)
 						{
 							chanceSize[k] *= 3;
-							below++;
+							combinedChanceSize += chanceSize[k];
 						}
 					}
-					for (int k = 1; k < 4; k++)
+					for (int k = 1; k < NUMBEROFCOLORS + 1; k++)
 					{
-						colorChances[k] = chanceSize[k] / (chanceSize[1] + chanceSize[2] + chanceSize[3]);
+						colorChances[k] = chanceSize[k] / combinedChanceSize;
 						colorChances[k] *= virusChance;
 					}
 					float colorRunning = 0;
 
-					for (int k = 0; k < 4; k++)
+					for (int k = 0; k < NUMBEROFCOLORS + 1; k++)
 					{
 						colorRunning += colorChances[k];
 						if (placeRoll < colorRunning)
@@ -290,9 +305,13 @@ namespace PuzzleGame
 				}
 			}
 			// If there's a color completely missing, just make a new level
-			if (colorsPlaced[1] == 0 || colorsPlaced[2] == 0 || colorsPlaced[3] == 0)
+			for (int i = 0; i < NUMBEROFCOLORS; i++)
 			{
-				NewGame(level);
+				if (colorsPlaced[i+1] == 0)
+				{
+					NewGame(level);
+					break;
+				}
 			}
 		}
 
@@ -304,22 +323,20 @@ namespace PuzzleGame
 
 		void SetUpcoming()
 		{
-			(int, int)[] things = {
-				(0, 0),
-				(0, 1),
-				(0, 2),
-				(1, 0),
-				(1, 1),
-				(1, 2),
-				(2, 0),
-				(2, 1),
-				(2, 2),
-			};
-			things = things.OrderBy(x => RNG.Next()).ToArray();
-			for (int i = 0; i < 9; i++)
+			int possiblePieces = NUMBEROFCOLORS * NUMBEROFCOLORS;
+			(int, int)[] things = new (int, int)[possiblePieces];
+			for (int i = 0; i < NUMBEROFCOLORS; i++)
 			{
-				UpcomingPieces[i] = UpcomingPieces[i + 9];
-				UpcomingPieces[i + 9] = things[i];
+				for (int j = 0; j < NUMBEROFCOLORS; j++)
+				{
+					things[i * NUMBEROFCOLORS + j] = (i, j);
+				}
+			}
+			things = things.OrderBy(x => RNG.Next()).ToArray();
+			for (int i = 0; i < possiblePieces; i++)
+			{
+				UpcomingPieces[i] = UpcomingPieces[i + possiblePieces];
+				UpcomingPieces[i + possiblePieces] = things[i];
 			}
 		}
 
@@ -489,14 +506,18 @@ namespace PuzzleGame
 		void NewPill()
 		{
 			CurrentMulti = 1;
+			PiecesDropped++;
+			if (PiecesDropped % 10 == 0)
+			{
+				SpeedIncrease = Math.Min(SpeedIncrease + 1, MAXSPEEDINCREASE);
+			}
 			CursorActive = true;
 			CursorPos = new Point(3, 0);
 			CursorUpright = false;
-			// TODO: grab bag
 			CursorColor1 = UpcomingPieces[NextPieceIndex].Item1;
 			CursorColor2 = UpcomingPieces[NextPieceIndex].Item2;
 			NextPieceIndex++;
-			if (NextPieceIndex == 9)
+			if (NextPieceIndex == NUMBEROFCOLORS * NUMBEROFCOLORS)
 			{
 				NextPieceIndex = 0;
 				SetUpcoming();
