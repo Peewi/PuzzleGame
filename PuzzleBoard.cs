@@ -420,12 +420,20 @@ namespace PuzzleGame
 					{
 						CursorPos.X += InputDir;
 					}
+					else
+					{
+						InputTimeHeld = InputRepeatDelay + InputRepeatInterval;
+					}
 				}
 				// drop timer
 				DropTime += dt;
-				if (Input.PlayerDown)
+				if (Input.JustPressed(Actions.Down))
 				{
-					DropTime += dt * 3;
+					DropTime = DropInterval;
+				}
+				else if (Input.PlayerDown)
+				{
+					DropTime += DropInterval / 4;
 				}
 				if (DropTime >= DropInterval)
 				{
