@@ -15,6 +15,7 @@ namespace PuzzleGame.UI
 		/// <returns></returns>
 		public static UIScreen MainMenuScreen(Game game)
 		{
+			Game1 g1 = (Game1)game;
 			var retVal = new UIScreen(game)
 			{
 				Purpose = ScreenPurpose.MainMenu
@@ -41,26 +42,29 @@ namespace PuzzleGame.UI
 			{
 				Text = "New game"
 			};
-			ng.OnClick += (snder, e) =>
+			ng.OnClick += (sender, e) =>
 			{
-				if (game is Game1 g1)
-				{
-					//g1.NewGame();
-					g1.UI.OpenScreen(DifficultySelectScreen(game));
-				}
+				g1.UI.OpenScreen(DifficultySelectScreen(game));
+				
 			};
 			spMenu.Children.Add(ng);
 			//
+			var hs = new Button(game)
+			{
+				Text = "High scores"
+			};
+			hs.OnClick += (sender, e) =>
+			{
+				g1.UI.OpenScreen(HighScoreScreen(game));
+			};
+			spMenu.Children.Add(hs);
 			var opt = new Button(game)
 			{
 				Text = "Options"
 			};
 			opt.OnClick += (sender, e) =>
 			{
-				if (game is Game1 g1)
-				{
-					g1.UI.OpenScreen(OptionsScreen(game));
-				}
+				g1.UI.OpenScreen(OptionsScreen(game));
 			};
 			spMenu.Children.Add(opt);
 

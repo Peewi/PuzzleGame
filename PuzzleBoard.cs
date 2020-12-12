@@ -498,7 +498,14 @@ namespace PuzzleGame
 			}
 			else if (State == PuzzleGameState.GameOver)
 			{
-				Game1.UI.OpenScreen(UIScreen.GameOverScreen(Game1));
+				if (Game1.Score.HighScoreAchieved(Points))
+				{
+					Game1.UI.OpenScreen(UIScreen.HighScoreNameEntryScreen(Game1));
+				}
+				else
+				{
+					Game1.UI.OpenScreen(UIScreen.GameOverScreen(Game1));
+				}
 			}
 			else if (State == PuzzleGameState.Victory)
 			{

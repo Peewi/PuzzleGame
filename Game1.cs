@@ -28,6 +28,7 @@ namespace PuzzleGame
 		public InputManager Input;
 		public PuzzleBoard Board;
 		public ConfigManager Config;
+		public HighScore Score;
 		public SoundManager Sound;
 		bool CurrentlyPlaying = false;
 
@@ -68,6 +69,7 @@ namespace PuzzleGame
 			Input.LoadKeybinds(Config.KeysFilePath);
 			Sound = new SoundManager(this);
 			Components.Add(Sound);
+			Score = new HighScore();
 
 			base.Initialize();
 		}
@@ -92,6 +94,7 @@ namespace PuzzleGame
 			Pixel = new Texture2D(GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
 			Pixel.SetData(new Color[] { Color.White });
 			Font = Content.Load<SpriteFont>("MainFont");
+			Font.DefaultCharacter = '?';
 			Sound.LoadSounds();
 		}
 
