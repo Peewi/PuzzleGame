@@ -33,6 +33,7 @@ namespace PuzzleGame
 		const string FOLDERNAME = "PuzzleGame";
 		const string CONFIGFILENAME = "conf.json";
 		const string KEYSFILENAME = "keys.json";
+		const string SCOREFILENAME = "highscore.json";
 		public string ConfigFolderPath => Path.Combine(
 			Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
 			FOLDERNAME);
@@ -44,6 +45,10 @@ namespace PuzzleGame
 			Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
 			FOLDERNAME,
 			KEYSFILENAME);
+		public string ScoreFilePath => Path.Combine(
+			Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+			FOLDERNAME,
+			SCOREFILENAME);
 		public bool UnappliedChanges => !Config.Equals(NewConfig);
 		public Config Config = new Config();
 		public Config NewConfig = new Config();

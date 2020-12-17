@@ -70,6 +70,7 @@ namespace PuzzleGame.UI
 				if (game is Game1 g1)
 				{
 					g1.Score.Add(name.Text, g1.Board.Points);
+					g1.Score.Save();
 					g1.MainMenu();
 					g1.UI.OpenScreen(HighScoreScreen(game));
 				}

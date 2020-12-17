@@ -69,7 +69,7 @@ namespace PuzzleGame
 			Input.LoadKeybinds(Config.KeysFilePath);
 			Sound = new SoundManager(this);
 			Components.Add(Sound);
-			Score = new HighScore();
+			Score = new HighScore(this);
 
 			base.Initialize();
 		}
